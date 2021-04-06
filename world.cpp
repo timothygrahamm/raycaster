@@ -36,54 +36,67 @@ void World::run(){
 void World::logic(){
     
     int y_offset = 0;
-    float inverse_tan = -1 * cos(this->player_angle) / sin(this->player_angle);
+    const float inverse_tan = cos(this->player_angle) / sin(this->player_angle);
 
     if (sin(player_angle)!=0){
         
         int x_offset;
-
             //if looking down
             if (sin(player_angle)>0){
                 y_offset = ((int) this->player_shape.getPosition().y >> 6 << 6) + 64;
-                int y_size = abs(player_shape.getPosition().y - y_offset);
-                float x_size = y_size * inverse_tan;
-                x_offset = player_shape.getPosition().x - x_size;
+                int y_change = y_offset - player_shape.getPosition().y;
 
-                int x_grid = std::min(int(floor(x_offset / this->tile_interval)), 8);
+                float x_change = y_change * inverse_tan;
+                x_offset = player_shape.getPosition().x + x_change;
+
+                int x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
                 int y_grid = y_offset / this->tile_interval - 1;
-                while(true){
+
+                int vision_steps = 0;
+                while(vision_steps < 8){
                     if (this->world_map[y_grid][x_grid]==1 || this->world_map[y_grid+1][x_grid]==1){
                         this->vision_shape.setPosition(sf::Vector2f(x_offset,y_offset));
                         break;
                     }
                     else{
                         y_offset += this->tile_interval;
-                        x_offset -= x_size;
-                        x_grid = std::min(int(floor(x_offset / this->tile_interval)), 8);
+                        y_change = this->tile_interval;
+                        x_change = y_change * inverse_tan;
+                        x_offset += x_change;
+
+                        x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
                         y_grid = y_offset / this->tile_interval - 1;
-                    }  
+                    }
+                    vision_steps++;  
                 }      
             }
             //if looking up
             if (sin(player_angle)<0){
                 y_offset = (int) this->player_shape.getPosition().y >> 6 << 6;
-                int y_size = abs(player_shape.getPosition().y - y_offset);
-                float x_size = y_size * inverse_tan;
-                x_offset = player_shape.getPosition().x + x_size;
+                int y_change = y_offset - player_shape.getPosition().y;
 
-                int x_grid = std::min(int(floor(x_offset / this->tile_interval)), 8);
+                float x_change = y_change * inverse_tan;
+                x_offset = player_shape.getPosition().x + x_change;
+
+                int x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
                 int y_grid = y_offset / this->tile_interval - 1;
-                while(true){
+                
+                int vision_steps = 0;
+                while(vision_steps < 8){
                     if (this->world_map[y_grid][x_grid]==1 || this->world_map[y_grid+1][x_grid]==1){
                         this->vision_shape.setPosition(sf::Vector2f(x_offset,y_offset));
                         break;
                     }
                     else{
                         y_offset -= this->tile_interval;
-                        x_offset += x_size;
-                        x_grid = std::min(int(floor(x_offset / this->tile_interval)), 8);
+                        y_change = -this->tile_interval;
+                        x_change = y_change * inverse_tan;
+                        x_offset += x_change;
+
+                        x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
                         y_grid = y_offset / this->tile_interval - 1;
                     }
+                    vision_steps++;
                 }
                 
             }
