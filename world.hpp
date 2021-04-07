@@ -41,6 +41,10 @@ class World
 
         void logic();
 
+        sf::Vector2f get_horizontal_intercept(float ray_angle);
+
+        sf::Vector2f get_vertical_intercept(float ray_angle);
+
         void inputs();
 
         void add_shape();

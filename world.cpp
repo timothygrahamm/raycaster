@@ -35,73 +35,162 @@ void World::run(){
 
 void World::logic(){
     
-    int y_offset = 0;
-    const float inverse_tan = cos(this->player_angle) / sin(this->player_angle);
+    sf::Vector2f h_intercept = this->get_horizontal_intercept(this->player_angle);
+    sf::Vector2f v_intercept = this->get_vertical_intercept(this->player_angle);
 
-    if (sin(player_angle)!=0){
+    float h_intercept_distance = abs(this->player_shape.getPosition().y - h_intercept.y)/abs(this->player_shape.getPosition().x - h_intercept.x);
+    float v_intercept_distance = abs(this->player_shape.getPosition().y - v_intercept.y)/abs(this->player_shape.getPosition().x - h_intercept.x);
+
+    if (h_intercept_distance >= v_intercept_distance){
+        this->vision_shape.setPosition(v_intercept);
+    }
+    else{
+        this->vision_shape.setPosition(h_intercept);
+    }  
+    
+
+}
+
+sf::Vector2f World::get_horizontal_intercept(float ray_angle){
+    const float inverse_tan = cos(ray_angle) / sin(ray_angle);
+    int vision_steps = INT8_MAX;
+    sf::Vector2f h_intercept = sf::Vector2f(INT8_MAX, INT8_MAX);
+    if (sin(ray_angle)!=0){
         
         int x_offset;
-            //if looking down
-            if (sin(player_angle)>0){
-                y_offset = ((int) this->player_shape.getPosition().y >> 6 << 6) + 64;
-                int y_change = y_offset - player_shape.getPosition().y;
+        //if looking down
+        if (sin(ray_angle)>0){
+            int y_offset = ((int) this->player_shape.getPosition().y >> 6 << 6) + 64;
+            int y_change = y_offset - player_shape.getPosition().y;
 
-                float x_change = y_change * inverse_tan;
-                x_offset = player_shape.getPosition().x + x_change;
+            float x_change = y_change * inverse_tan;
+            x_offset = player_shape.getPosition().x + x_change;
 
-                int x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
-                int y_grid = y_offset / this->tile_interval - 1;
+            int x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
+            int y_grid = y_offset / this->tile_interval - 1;
 
-                int vision_steps = 0;
-                while(vision_steps < 8){
-                    if (this->world_map[y_grid][x_grid]==1 || this->world_map[y_grid+1][x_grid]==1){
-                        this->vision_shape.setPosition(sf::Vector2f(x_offset,y_offset));
-                        break;
-                    }
-                    else{
-                        y_offset += this->tile_interval;
-                        y_change = this->tile_interval;
-                        x_change = y_change * inverse_tan;
-                        x_offset += x_change;
-
-                        x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
-                        y_grid = y_offset / this->tile_interval - 1;
-                    }
-                    vision_steps++;  
-                }      
-            }
-            //if looking up
-            if (sin(player_angle)<0){
-                y_offset = (int) this->player_shape.getPosition().y >> 6 << 6;
-                int y_change = y_offset - player_shape.getPosition().y;
-
-                float x_change = y_change * inverse_tan;
-                x_offset = player_shape.getPosition().x + x_change;
-
-                int x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
-                int y_grid = y_offset / this->tile_interval - 1;
-                
-                int vision_steps = 0;
-                while(vision_steps < 8){
-                    if (this->world_map[y_grid][x_grid]==1 || this->world_map[y_grid+1][x_grid]==1){
-                        this->vision_shape.setPosition(sf::Vector2f(x_offset,y_offset));
-                        break;
-                    }
-                    else{
-                        y_offset -= this->tile_interval;
-                        y_change = -this->tile_interval;
-                        x_change = y_change * inverse_tan;
-                        x_offset += x_change;
-
-                        x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
-                        y_grid = y_offset / this->tile_interval - 1;
-                    }
-                    vision_steps++;
+            vision_steps = 0;
+            while(vision_steps < 8){
+                if (this->world_map[y_grid][x_grid]==1 || this->world_map[y_grid+1][x_grid]==1){
+                    h_intercept = sf::Vector2f(x_offset,y_offset);
+                    break;
                 }
-                
+                else{
+                    y_offset += this->tile_interval;
+                    y_change = this->tile_interval;
+                    x_change = y_change * inverse_tan;
+                    x_offset += x_change;
+
+                    x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
+                    y_grid = y_offset / this->tile_interval - 1;
+                }
+                vision_steps++;  
+            }      
+        }
+        //if looking up
+        if (sin(ray_angle)<0){
+            int y_offset = (int) this->player_shape.getPosition().y >> 6 << 6;
+            int y_change = y_offset - player_shape.getPosition().y;
+
+            float x_change = y_change * inverse_tan;
+            x_offset = player_shape.getPosition().x + x_change;
+
+            int x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
+            int y_grid = y_offset / this->tile_interval - 1;
+
+            vision_steps = 0;
+            while(vision_steps < 8){
+                if (this->world_map[y_grid][x_grid]==1 || this->world_map[y_grid+1][x_grid]==1){
+                    h_intercept = sf::Vector2f(x_offset,y_offset);
+                    break;
+                }
+                else{
+                    y_offset -= this->tile_interval;
+                    y_change = -this->tile_interval;
+                    x_change = y_change * inverse_tan;
+                    x_offset += x_change;
+
+                    x_grid = std::min(abs(int(floor(x_offset / this->tile_interval))), 8);
+                    y_grid = y_offset / this->tile_interval - 1;
+                }
+                vision_steps++;
             }
-          
+            
+        }
     }
+
+    return h_intercept;
+}
+
+sf::Vector2f World::get_vertical_intercept(float ray_angle){
+    const float tan = sin(ray_angle) / cos(ray_angle);
+    int vision_steps = INT8_MAX;
+    sf::Vector2f v_intercept = sf::Vector2f(INT8_MAX, INT8_MAX);
+    if (cos(ray_angle)!=0){
+        
+        int y_offset;
+        //if looking right
+        if (cos(ray_angle)>0){
+            int x_offset = ((int) this->player_shape.getPosition().x >> 6 << 6) + 64;
+            int x_change = x_offset - player_shape.getPosition().x;
+
+            float y_change = x_change * tan;
+            y_offset = player_shape.getPosition().y + y_change;
+
+            int y_grid = std::min(abs(int(floor(y_offset / this->tile_interval))), 8);
+            int x_grid = x_offset / this->tile_interval - 1;
+
+            vision_steps = 0;
+            while(vision_steps < 8){
+                if (this->world_map[y_grid][x_grid]==1 || this->world_map[y_grid][x_grid+1]==1){
+                    v_intercept = sf::Vector2f(x_offset,y_offset);
+                    break;
+                }
+                else{
+                    x_offset += this->tile_interval;
+                    x_change = this->tile_interval;
+                    y_change = x_change * tan;
+                    y_offset += y_change;
+
+                    y_grid = std::min(abs(int(floor(y_offset / this->tile_interval))), 8);
+                    x_grid = x_offset / this->tile_interval - 1;
+                }
+                vision_steps++;  
+            }      
+        }
+        //if looking left
+        if (cos(ray_angle)<0){
+            int x_offset = (int) this->player_shape.getPosition().x >> 6 << 6;
+            int x_change = x_offset - player_shape.getPosition().x;
+
+            float y_change = x_change * tan;
+            y_offset = player_shape.getPosition().y + y_change;
+
+            int y_grid = std::min(abs(int(floor(y_offset / this->tile_interval))), 8);
+            int x_grid = x_offset / this->tile_interval - 1;
+
+            vision_steps = 0;
+            while(vision_steps < 8){
+                if (this->world_map[y_grid][x_grid]==1 || this->world_map[y_grid][x_grid+1]==1){
+                    v_intercept = sf::Vector2f(x_offset,y_offset);
+                    break;
+                }
+                else{
+                    x_offset -= this->tile_interval;
+                    x_change = -this->tile_interval;
+                    y_change = x_change * tan;
+                    y_offset += y_change;
+
+                    y_grid = std::min(abs(int(floor(y_offset / this->tile_interval))), 8);
+                    x_grid = x_offset / this->tile_interval - 1;
+                }
+                vision_steps++;
+            }
+            
+        }
+    }
+
+    return v_intercept;
 }
 
 void World::draw(){
