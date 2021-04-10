@@ -2,6 +2,7 @@
 #define LINE_H
 
 #include "SFML/Graphics.hpp"
+#include <cmath>
 
 class Line : public sf::Drawable
 
@@ -13,6 +14,8 @@ class Line : public sf::Drawable
         }
 
         Line(sf::Vector2f _p1, sf::Vector2f _p2);
+
+        float get_length();
 
         sf::Vector2f p1;
 
