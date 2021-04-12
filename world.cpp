@@ -43,7 +43,7 @@ void World::logic(){
         ray_length = ray_length * cos(angle_difference);
         ray_length /= 24;
 
-        sf::RectangleShape wall = sf::RectangleShape(sf::Vector2f(16, 700/(ray_length)));
+        sf::RectangleShape wall = sf::RectangleShape(sf::Vector2f(8, 700/(ray_length)));
 
         wall.setFillColor(this->get_color(ray_angle));
 
@@ -51,7 +51,7 @@ void World::logic(){
 
         
         this->walls.push_back(wall);
-        current_x +=16;
+        current_x +=8;
     }
     //this->ray_intercepts.push_back(Line(this->player_shape.getPosition(), get_closest_intercept(player_angle)));
 }
